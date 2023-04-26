@@ -1,0 +1,54 @@
+- name: Set the index.html path
+  set_fact:
+    file_path: /var/www/html
+
+- name: Copy vars.html
+  copy:
+    src: vars.html
+    dest: "{{ file_path }}/vars.html"
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Add a link from index.html to vars.html
+  lineinfile:
+    path: "{{ file_path }}/index.html"
+    line: <a href=vars.html>Ansible Variables Page</a>
+    insertafter: EOF
+  ignore_errors: "{{ ansible_check_mode }}"
+
+- name: Insert hostname from Ansible facts
+  lineinfile:
+    path: "{{ file_path }}/vars.html"
+    line: <p>My name is {{ ansible_hostname }}.</p>
+  ignore_errors: "{{ ansible_check_mode }}"  
+
+- name: Add a link from vars.html back to index.html
+  lineinfile:
+    path: "{{ file_path }}/vars.html"
+    line: <a href=index.html>Back to index.html</a>
+    insertafter: EOF
+  ignore_errors: "{{ ansible_check_mode }}"
+
+- name: Gather facts on a file
+  stat:
+    path: /etc/hosts
+  register: i
+
+- name: Insert a line when condition is true
+  when: i.stat.exists == true
+  lineinfile:
+    path: "{{ file_path }}/vars.html"
+    line: "<p>File {{ i.stat.path }} exists.</p>"
+  ignore_errors: "{{ ansible_check_mode }}"
+
+- name: Set a fact within a role
+  set_fact:
+    a_fact: The sky is blue
+
+- name: Insert a line using a_fact
+  lineinfile:
+    path: "{{ file_path }}/vars.html"
+    line: "<p> {{ a_fact }}"
+    insertafter: EOF
+  ignore_errors: "{{ ansible_check_mode }}"
